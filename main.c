@@ -184,6 +184,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             btree_node *Father_node = node->Pointer_father;
 
             if(Father_node != NULL){
+                Right_node->Pointer_father = Father_node;
                 return Btree_insert(node->Pointer_father, Right_node->Vkeys[0], Right_node);
 
             }
@@ -196,6 +197,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
                 Root_node->Vpointer_children[1] = Right_node;
                 Root_node->Vkeys[0] = Right_node->Vkeys[0];
                 Root_node->used = 1;
+                Right_node->Pointer_father = Root_node;
                 return Root_node;
 
             }
