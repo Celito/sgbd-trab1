@@ -1,7 +1,7 @@
 //Alunas: Arina Sanches - 392476 e Fernanda Bezerra Nascimento - 388834
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
 
 const int Tree_nodecapacity = 9;
 //Definição das stucts da árvore
@@ -67,7 +67,7 @@ btree_node* Allocate_btree_node(btree_node *Pointer_father,
     node->Vpointer_children = malloc(sizeof(btree_node*) * (capacity + 1));
     for (int i = 0; i < (capacity + 1); ++i)
     {
-        node->Vpointer_children = NULL;
+        node->Vpointer_children[i] = NULL;
     }
     node->Pointer_father = Pointer_father;
     node->Pointer_next = Pointer_next;
@@ -94,18 +94,48 @@ int compare_int(const void *a, const void *b){
     }
 }
 
+char* Btree_visualisation(btree_node *root){
+    char *str_visualization = malloc(sizeof(char)*18);
+    char str_num[4];
+    str_visualization[0] = '[';
+    str_visualization[1] = '\0';
+    for (int i = 0; i < root->capacity; ++i) {
+        if(i < root->used) {
+            if (root->Vkeys[i] < 100) {
+                strcat(str_visualization, " ");
+            }
+            if (root->Vkeys[i] < 10) {
+                strcat(str_visualization, " ");
+            }
 
-// TODO Flag para saber se o elemento é final
+            sprintf(str_num, "%d", root->Vkeys[i]);
+            strcat(str_visualization, str_num);
+        }
+        else {
+            sprintf(str_num, "   ");
+            strcat(str_visualization, str_num);
+        }
+        if(i == root->capacity - 1){
+            strcat(str_visualization,"]");
+        }
+        else{
+            strcat(str_visualization, "|");
+        }
+    }
+    return str_visualization;
+}
+
+
 btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_node){
 
     if (node->Vpointer_children[0] == NULL || Child_right_node != NULL){
-        if (node->used == node->capacity-1){
+        if (node->used == node->capacity){
             //SPLIT
             int Vkeys_aux_size = node->capacity + 1;
             int *Vkeys_aux = malloc(sizeof(int)*(Vkeys_aux_size));
             btree_node *Right_node = Allocate_btree_node(node->Pointer_father, node->Pointer_next,
                                                          node, node->capacity);
-            //TODO Alocar mais um no ponteiro de childrens
+            
             btree_node **Vpointer_children_aux = Alocate_vpointer_children(node->capacity + 1);
 
             for (int i = 0; i < node->capacity; ++i) {
@@ -115,13 +145,13 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 
             for (int i = 0; i < Vkeys_aux_size - 1; ++i) {
                 if(i != Vkeys_aux_size - 2){
-                    if (Vkeys_aux[i] < value && Vkeys_aux[i + 1] > value){
+                    if (Vkeys_aux[i] > value){
                         for(int j = Vkeys_aux_size -1 ; j > i ; j--){
                             Vkeys_aux[j] = Vkeys_aux[j - 1];
                             Vpointer_children_aux[j + 1] = Vpointer_children_aux[j];
                         }
                         Vkeys_aux[i] = value;
-                        Vpointer_children_aux[i] = Child_right_node;
+                        Vpointer_children_aux[i+1] = Child_right_node;
                         break;
                     }
                 }
@@ -133,7 +163,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 
             int Middle_position = Vkeys_aux_size/2;
 
-            Right_node->used = node->capacity - Middle_position;
+            Right_node->used = node->capacity - Middle_position + 1;
             for (int j = 0; j < Right_node->used; ++j) {
                 Right_node->Vkeys[j] = Vkeys_aux[j+Middle_position];
                 Right_node->Vpointer_children[j] = Vpointer_children_aux[j+Middle_position];
@@ -141,8 +171,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size];
 
             node->Pointer_next = Right_node;
-            node->used = node->capacity - Right_node->used;
-
+            node->used = Middle_position;
             for (int k = 0; k < node->used ; ++k) {
                 node->Vkeys[k] = Vkeys_aux[k];
                 node->Vpointer_children[k] = Vpointer_children_aux[k];
@@ -150,7 +179,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             node->Vpointer_children[node->used] = Vpointer_children_aux[node->used];
 
             free(Vkeys_aux);
-            free(Vpointer_children_aux);
+            //free(Vpointer_children_aux);
 
             btree_node *Father_node = node->Pointer_father;
 
@@ -175,9 +204,11 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
         else {
             node->Vkeys[node->used] = value;
             node->used++;
-            qsort(node->Vkeys, (size_t)node->used, sizeof(int), compare_int);
+            qsort(node->Vkeys, (size_t) node->used, sizeof(int), compare_int);
+            while (node->Pointer_father != NULL) {
+                node = node->Pointer_father;
+            }
             return node;
-
         }
 
     }
@@ -203,13 +234,14 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 int main() {
     int test1_size = 4;
     int test1_entries = 16;
-    int test1_elements[16] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 12, 61, 25, 52};
+    int test1_elements[16] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 61, 25, 52, 19};
 
     btree_node *tree = NewTree(test1_size);
 
     for (int i = 0; i < test1_entries; ++i)
     {
         tree = Btree_insert(tree, test1_elements[i], NULL);
+        printf("%s\n",Btree_visualisation(tree));
     }
     system("pause");
     return 0;
