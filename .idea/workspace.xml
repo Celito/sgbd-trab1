@@ -11,9 +11,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="afe7bf49-828a-4143-9ea9-19799f588377" name="Default" comment="">
+    <list default="true" id="afe7bf49-828a-4143-9ea9-19799f588377" name="Default" comment="Btree_insert v02 até a quinta interação funcionando">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/main.c" afterPath="$PROJECT_DIR$/main.c" />
     </list>
     <ignored path="BPlusTree.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -290,7 +289,7 @@
       <workItem from="1523220849991" duration="6417000" />
       <workItem from="1523237834612" duration="1646000" />
       <workItem from="1523312481279" duration="14555000" />
-      <workItem from="1523395820662" duration="8270000" />
+      <workItem from="1523395820662" duration="8767000" />
     </task>
     <task id="LOCAL-00001" summary="Btree_insert v01 não funcionando">
       <created>1523330458845</created>
@@ -299,11 +298,18 @@
       <option name="project" value="LOCAL" />
       <updated>1523330458845</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Btree_insert v02 até a quinta interação funcionando">
+      <created>1523414010555</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1523414010556</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="32142000" />
+    <option name="totallyTimeSpent" value="32639000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
@@ -337,7 +343,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Btree_insert v01 não funcionando" />
-    <option name="LAST_COMMIT_MESSAGE" value="Btree_insert v01 não funcionando" />
+    <MESSAGE value="Btree_insert v02 até a quinta interação funcionando" />
+    <option name="LAST_COMMIT_MESSAGE" value="Btree_insert v02 até a quinta interação funcionando" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
