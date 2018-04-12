@@ -250,7 +250,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // Insere o novo valor no vetor de valores auxiliar e tambem o ponteiro da direita no
             // vetor de ponteiros auxiliar, os valores maiores que o novo valor vao ser movidos
             // pra direita junto com os ponteiros
-            for (int i = 0; i < Vkeys_aux_size - 1; ++i) {
+            for (int i = 0; i < Vkeys_aux_size; ++i) {
                 if(i != Vkeys_aux_size - 1){
                     if (Vkeys_aux[i] > value){
                         for(int j = Vkeys_aux_size -1 ; j > i ; j--){
@@ -275,11 +275,16 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // TODO: soh devemos passar o elemento do meio junto com os outros para o noh da
             // direita, caso o esse noh seja uma noh folha
             Right_node->used = node->capacity - Middle_position + 1;
-            for (int j = 0; j < Right_node->used; ++j) {
-                Right_node->Vkeys[j] = Vkeys_aux[j+Middle_position];
-                Right_node->Vpointer_children[j] = Vpointer_children_aux[j+Middle_position];
+            int adjust = 0;
+            if (Vpointer_children_aux[0] != NULL) {
+                adjust = 1;
+                Right_node->used--;
             }
-            Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size];
+            for (int j = 0 ; j < Right_node->used; ++j) {
+                Right_node->Vkeys[j] = Vkeys_aux[j + Middle_position + adjust];
+                Right_node->Vpointer_children[j] = Vpointer_children_aux[j+Middle_position + adjust];
+            }
+            Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size + adjust];
 
             // Ajusta o noh atual pra ser o novo noh da esquerda, removendo os elementos q foram
             // pro outro noh
@@ -292,7 +297,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             node->Vpointer_children[node->used] = Vpointer_children_aux[node->used];
 
             // Libera a memoria usada pelos vetores auxiliares
-            free(Vkeys_aux);
+
 
             btree_node *Father_node = node->Pointer_father;
 
@@ -303,7 +308,8 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
                 // como pai e inserimos o elemento do meio da divisao nesse noh pai junto com o
                 // novo ponteiro da direita
                 Right_node->Pointer_father = Father_node;
-                return Btree_insert(node->Pointer_father, Right_node->Vkeys[0], Right_node);
+                return Btree_insert(node->Pointer_father, Vkeys_aux[Middle_position], Right_node);
+
             }
             else{ // Caso o noh atual nao tenha pai
 
@@ -404,8 +410,7 @@ int main() {
     // Insercao em massa (Bulk loading)
     for (int i = 0; i < test1_entries; ++i) {
         tree = Btree_insert(tree, test1_elements[i], NULL);
-        // Impressao do noh raiz da arvore
-        // TODO: mudar a impressao para imprimir toda a arvore e nao soh a raiz
+        // Impressao da arvore
         printf("%d\n", test1_elements[i]);
         printf("%s\n", Print_btree(tree));
         printf("%d\n\n", Count_nodes(tree,0));
