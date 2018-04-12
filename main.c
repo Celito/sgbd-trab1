@@ -128,33 +128,74 @@ char* Print_btree_node(btree_node *node){
     return str_visualization;
 }
 
-void Print_btree_recursive(btree_node *node, char* current_string, int num_pointers, int* pointers_pos,
+void Print_btree_recursive(btree_node *node, char* current_string, int *num_pointers, int **pointers_pos,
                            int indentation){
-    strcat(current_string,Print_btree_node(node));
-    int pointers_count;
 
+    // Imprimir ponteiros anteriores
+    if((*num_pointers) > 0) {
+        // Imprimir a linha com todos os pontieros
+        int pos = 0;
+        for (int i = 0; i < (*num_pointers); ++i) {
+            for (int j = pos; j < (*pointers_pos)[i]; ++j) {
+                strcat(current_string, " ");
+                pos++;
+            }
+            strcat(current_string, "|");
+            pos++;
+        }
+        strcat(current_string, "\n");
+
+        // Imprimir os caracteres antes do nodo atual
+        pos = 0;
+        for (int i = 0; i < (*num_pointers); ++i) {
+            for (int j = pos; j < (*pointers_pos)[i]; ++j) {
+                strcat(current_string, " ");
+                pos++;
+            }
+            if(i == (*num_pointers) - 1) {
+                strcat(current_string, "+---");
+            }
+            else {
+                strcat(current_string, "|");
+            }
+            pos++;
+        }
+
+        (*num_pointers)--;
+    }
+
+    // Imprimir o nodo atual
+    strcat(current_string,Print_btree_node(node));
+
+    // Reorganizar os ponteiros
+    int pointers_count = 0;
     for (int j = 0; j < node->used + 1 ; ++j) {
         if (node->Vpointer_children[j] != NULL){
             pointers_count ++;
         }
     }
 
-    if (num_pointers == 0){
-        pointers_pos = malloc(sizeof(int)*pointers_count);
-    }
-    else{
-        pointers_pos = (int*) realloc(pointers_pos, (num_pointers + pointers_count - 1) * sizeof(int));
-    }
+    if (pointers_count > 0) {
+        if ((*num_pointers) == 0){
+            (*pointers_pos) = malloc(sizeof(int)*pointers_count);
+        }
+        else{
+            (*pointers_pos) = (int*) realloc((*pointers_pos), ((*num_pointers) + pointers_count) * sizeof(int));
+        }
 
-    for (int k = 0; k < pointers_count ; ++k) {
-        pointers_pos[k + (num_pointers - 1)] = indentation + (k*4);
+        int pointers_pos_start = (*num_pointers);
+        for (int k = 0; k < pointers_count ; ++k) {
+            (*pointers_pos)[k + pointers_pos_start] = indentation;
+            indentation += 4;
+        }
+        (*num_pointers) += pointers_count;
     }
 
     for (int i = node->used; i >= 0 ; --i) {
         if(node->Vpointer_children[i] != NULL){
             strcat(current_string, "\n");
-            num_pointers += node->used+1;
             Print_btree_recursive(node->Vpointer_children[i], current_string, num_pointers, pointers_pos, indentation);
+            indentation -= 4;
         }
     }
 }
@@ -164,9 +205,12 @@ void Print_btree_recursive(btree_node *node, char* current_string, int num_point
 /// \return
 char* Print_btree(btree_node *root){
     int count_nodes = Count_nodes(root, 0);
-    char *str_print = malloc(sizeof(char*)*count_nodes*18);
+    char *str_print = malloc(sizeof(char*)*5000);
     str_print[0]    = '\0';
-    Print_btree_recursive(root, str_print, 0, NULL);
+    int num_pointers = 0;
+    int **pointerpos = malloc(sizeof(int*));
+    (*pointerpos) = NULL;
+    Print_btree_recursive(root, str_print, &num_pointers, pointerpos, 0);
     return str_print;
 }
 
