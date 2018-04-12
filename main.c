@@ -83,9 +83,19 @@ btree_node* NewTree(int size)
     return Allocate_btree_node(NULL,NULL,NULL, size);
 }
 
-/// imprime o valor de um noh em uma string
-/// \param node - noh q vai ser impresso
-/// \return versao impressa do noh passado
+int Count_nodes(btree_node *node, int current_count){
+    for (int i = 0; i < node->used+1 ; ++i) {
+        if (node->Vpointer_children[i] != NULL) {
+            current_count += Count_nodes(node->Vpointer_children[i], 0);
+        }
+    }
+    current_count++;
+    return current_count;
+}
+
+/// imprime o valor de um nó em uma string
+/// \param node - nó q vai ser impresso
+/// \return versao impressa do nó passado
 char* Print_btree_node(btree_node *node){
     char *str_visualization = malloc(sizeof(char)*18);
     char str_num[4];
@@ -113,12 +123,55 @@ char* Print_btree_node(btree_node *node){
         else{
             strcat(str_visualization, "|");
         }
+
     }
     return str_visualization;
 }
 
-/// Insere um valor em um noh da arvore
-/// \param node - noh onde o valor deve ser inserido
+void Print_btree_recursive(btree_node *node, char* current_string, int num_pointers, int* pointers_pos,
+                           int indentation){
+    strcat(current_string,Print_btree_node(node));
+    int pointers_count;
+
+    for (int j = 0; j < node->used + 1 ; ++j) {
+        if (node->Vpointer_children[j] != NULL){
+            pointers_count ++;
+        }
+    }
+
+    if (num_pointers == 0){
+        pointers_pos = malloc(sizeof(int)*pointers_count);
+    }
+    else{
+        pointers_pos = (int*) realloc(pointers_pos, (num_pointers + pointers_count - 1) * sizeof(int));
+    }
+
+    for (int k = 0; k < pointers_count ; ++k) {
+        pointers_pos[k + (num_pointers - 1)] = indentation + (k*4);
+    }
+
+    for (int i = node->used; i >= 0 ; --i) {
+        if(node->Vpointer_children[i] != NULL){
+            strcat(current_string, "\n");
+            num_pointers += node->used+1;
+            Print_btree_recursive(node->Vpointer_children[i], current_string, num_pointers, pointers_pos, indentation);
+        }
+    }
+}
+
+///
+/// \param root
+/// \return
+char* Print_btree(btree_node *root){
+    int count_nodes = Count_nodes(root, 0);
+    char *str_print = malloc(sizeof(char*)*count_nodes*18);
+    str_print[0]    = '\0';
+    Print_btree_recursive(root, str_print, 0, NULL);
+    return str_print;
+}
+
+/// Insere um valor em um nó da arvore
+/// \param node - nó onde o valor deve ser inserido
 /// \param value - valor a ser inserido
 /// \param Child_right_node - ponteiro da direita do novo valor a ser inserido, caso seja NULL,
 ///                           o valor a ser inserido eh um valor novo de folha
@@ -143,8 +196,10 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 
             // Alocacao do vetor de ponteiros auxiliar para divisao dos ponteiros no noh
             btree_node **Vpointer_children_aux = Alocate_vpointer_children(node->capacity + 1);
-            for (int i = 0; i < node->capacity; ++i) {
-                Vkeys_aux[i] = node->Vkeys[i];
+            for (int i = 0; i < node->capacity+1; ++i) {
+                if (i != node->capacity) {
+                    Vkeys_aux[i] = node->Vkeys[i];
+                }
                 Vpointer_children_aux[i] = node->Vpointer_children[i];
             }
 
@@ -194,9 +249,6 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 
             // Libera a memoria usada pelos vetores auxiliares
             free(Vkeys_aux);
-            // TODO: liberar a memoria desse vetor de ponteiros auxiliar (talvez precise dar free
-            // nos ponteiros filhos primeiro?)
-            //free(Vpointer_children_aux);
 
             btree_node *Father_node = node->Pointer_father;
 
@@ -235,33 +287,26 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
         }
         else { // Caso o no atual tenha espaco pra inserir o novo valor
 
-            // Checa se esse eh um noh novo sem nenhum elemento
-//            if(node->used == 0) {
-//                // Insere o valor na primeira posicao do noh
-//                node->Vkeys[0] = value;
-//                node->Vpointer_children[1] = Child_right_node;
-//            }
-//            else {
-                // Insere o valor novo na posicao correta junto com o ponteiro da direita dele e tambem
-                // move os valores maiores junto com os ponteiros deles uma casa pra direita
-                for (int i = 0; i < node->used + 1; ++i) {
-                    if(i != node->used){
-                        if (node->Vkeys[i] > value){
-                            for(int j = node->used; j > i ; j--){
-                                node->Vkeys[j] = node->Vkeys[j - 1];
-                                node->Vpointer_children[j + 1] = node->Vpointer_children[j];
-                            }
-                            node->Vkeys[i] = value;
-                            node->Vpointer_children[i+1] = Child_right_node;
-                            break;
+
+            // Insere o valor novo na posicao correta junto com o ponteiro da direita dele e tambem
+            // move os valores maiores junto com os ponteiros deles uma casa pra direita
+            for (int i = 0; i < node->used + 1; ++i) {
+                if(i != node->used){
+                    if (node->Vkeys[i] > value){
+                        for(int j = node->used; j > i ; j--){
+                            node->Vkeys[j] = node->Vkeys[j - 1];
+                            node->Vpointer_children[j + 1] = node->Vpointer_children[j];
                         }
-                    }
-                    else{
                         node->Vkeys[i] = value;
                         node->Vpointer_children[i+1] = Child_right_node;
+                        break;
                     }
                 }
-//            }
+                else{
+                    node->Vkeys[i] = value;
+                    node->Vpointer_children[i+1] = Child_right_node;
+                }
+            }
             node->used++;
 
             // Procura a raiz da arvore
@@ -310,14 +355,15 @@ int main() {
     btree_node *tree = NewTree(test1_size);
 
     // Insercao em massa (Bulk loading)
-    for (int i = 0; i < test1_entries; ++i)
-    {
+    for (int i = 0; i < test1_entries; ++i) {
         tree = Btree_insert(tree, test1_elements[i], NULL);
-
         // Impressao do noh raiz da arvore
         // TODO: mudar a impressao para imprimir toda a arvore e nao soh a raiz
-        printf("%s\n", Print_btree_node(tree));
+        printf("%d\n", test1_elements[i]);
+        printf("%s\n", Print_btree(tree));
+        printf("%d\n\n", Count_nodes(tree,0));
     }
+
     system("pause");
     return 0;
 }
