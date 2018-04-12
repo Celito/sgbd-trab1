@@ -251,7 +251,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // vetor de ponteiros auxiliar, os valores maiores que o novo valor vao ser movidos
             // pra direita junto com os ponteiros
             for (int i = 0; i < Vkeys_aux_size - 1; ++i) {
-                if(i != Vkeys_aux_size - 2){
+                if(i != Vkeys_aux_size - 1){
                     if (Vkeys_aux[i] > value){
                         for(int j = Vkeys_aux_size -1 ; j > i ; j--){
                             Vkeys_aux[j] = Vkeys_aux[j - 1];
@@ -337,9 +337,10 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             for (int i = 0; i < node->used + 1; ++i) {
                 if(i != node->used){
                     if (node->Vkeys[i] > value){
-                        for(int j = node->used; j > i ; j--){
+                        for(int j = node->used ; j >= i ; j--){
                             node->Vkeys[j] = node->Vkeys[j - 1];
                             node->Vpointer_children[j + 1] = node->Vpointer_children[j];
+
                         }
                         node->Vkeys[i] = value;
                         node->Vpointer_children[i+1] = Child_right_node;
@@ -372,10 +373,12 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
         for (int i = 0; i < node->used; i++) {
             if(value < node->Vkeys[i]){
                 correct_child = node->Vpointer_children[i];
+                break;
             }
 
             else if(i == node->used - 1){
                 correct_child = node->Vpointer_children[i+1];
+                break;
             }
 
         }
