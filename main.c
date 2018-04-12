@@ -272,10 +272,11 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             int Middle_position = Vkeys_aux_size/2;
 
             // Passa todos o valores que devem ir pro noh da direita
-            // TODO: soh devemos passar o elemento do meio junto com os outros para o noh da
-            // direita, caso o esse noh seja uma noh folha
             Right_node->used = node->capacity - Middle_position + 1;
+
             int adjust = 0;
+            // Caso o noh nao seja uma noh folha, nao devemos passar o valor do meio na divisao. Para isso diminuimos o
+            // numero de elementos do noh da direita e usamos "adjust" pra pegar os ultimos valores do vetor auxiliar
             if (Vpointer_children_aux[0] != NULL) {
                 adjust = 1;
                 Right_node->used--;
@@ -284,7 +285,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
                 Right_node->Vkeys[j] = Vkeys_aux[j + Middle_position + adjust];
                 Right_node->Vpointer_children[j] = Vpointer_children_aux[j+Middle_position + adjust];
             }
-            Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size + adjust];
+            Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size];
 
             // Ajusta o noh atual pra ser o novo noh da esquerda, removendo os elementos q foram
             // pro outro noh
@@ -323,7 +324,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
                 // Colocamos o valor do meio no pai novo com os ponteiros da esquerda e direita
                 Root_node->Vpointer_children[0] = node;
                 Root_node->Vpointer_children[1] = Right_node;
-                Root_node->Vkeys[0] = Right_node->Vkeys[0];
+                Root_node->Vkeys[0] = Vkeys_aux[Middle_position];
                 Root_node->used = 1;
 
                 // Fazemos o noh da direita apontar pro pai novo
