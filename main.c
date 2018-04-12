@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
-const int Tree_nodecapacity = 9;
 //Definição das stucts da árvore
 typedef struct btree_node btree_node;
 
@@ -17,7 +17,9 @@ struct btree_node {
     int capacity;
 };
 
-//Função para alocar espaço do vetor de ponteiros para os filhos do nó
+/// Função para alocar espaço do vetor de ponteiros para os filhos do nó
+/// \param Tree_nodecapacity = É a capacidade de um nó
+/// \return o vetor de ponteiros Vpointer_children
 btree_node** Alocate_vpointer_children(int Tree_nodecapacity){
     btree_node **Vpointer_children = malloc(sizeof(btree_node *)*Tree_nodecapacity);
     for(int i=0; i < Tree_nodecapacity; i++){
@@ -26,7 +28,6 @@ btree_node** Alocate_vpointer_children(int Tree_nodecapacity){
     return Vpointer_children;
 
 }
-
 
 btree_node* Btree_searchEquality(btree_node *node, int key)
 {
@@ -61,6 +62,13 @@ btree_node* Btree_searchEquality(btree_node *node, int key)
     return NULL;
 }
 
+/// Função para alocar um nó de árvore
+/// \param Pointer_father   = ponteiro para o pai, se for raiz será NULO
+/// \param Pointer_next     = ponteiro para o irmão da direita se for um nó não folha, sera NULO
+/// \param Pointer_previous = ponteiro para o irmão da esquerda se for um nó não folha, sera NULO
+/// \param capacity         = é a quantidade de chaves que cabem em um nó e a quantidades de ponteiros em um nó será
+///                           capacity + 1
+/// \return                 = Um novo nó com a memória já alocada
 btree_node* Allocate_btree_node(btree_node *Pointer_father,
                                 btree_node *Pointer_next, btree_node *Pointer_previous, int capacity){
     btree_node *node = malloc(sizeof(btree_node));
@@ -77,10 +85,13 @@ btree_node* Allocate_btree_node(btree_node *Pointer_father,
     node->capacity = capacity;
     return node;
 }
-
-btree_node* NewTree(int size)
+/// Função para criar uma nova árvore
+/// \param capacity = é a quantidade de chaves que cabem em um nó e a quantidades de ponteiros em um nó será
+///                   capacity + 1
+/// \return o ponteiro para uma nova árvore
+btree_node* NewTree(int capacity)
 {
-    return Allocate_btree_node(NULL,NULL,NULL, size);
+    return Allocate_btree_node(NULL,NULL,NULL, capacity);
 }
 
 int Count_nodes(btree_node *node, int current_count){
@@ -222,23 +233,23 @@ char* Print_btree(btree_node *root){
 /// \return retorna a raiz da arvore depois do valor ser inserido
 btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_node){
 
-    // Checa se o noh atual eh uma folha OU
-    // se essa insercao eh uma insercao recursiva em um noh pai
+    // Checa se o nó atual eh uma folha OU
+    // se essa insercao eh uma insercao recursiva em um nó pai
     if (node->Vpointer_children[0] == NULL || Child_right_node != NULL){
 
-        // Checa se o noh atual nao tenha mais espaco para um novo elemento
+        // Checa se o nó atual nao tenha mais espaco para um novo elemento
         if (node->used == node->capacity){
 
-            // Comeca o split do no atual
+            // Comeca o split do nó atual
             // Criacao do vetor de valores auxiliar
             int Vkeys_aux_size = node->capacity + 1;
             int *Vkeys_aux = malloc(sizeof(int)*(Vkeys_aux_size));
 
-            // Alocacao do novo noh da direita geredo no split
+            // Alocacao do novo nó da direita geredo no split
             btree_node *Right_node = Allocate_btree_node(node->Pointer_father, node->Pointer_next,
                                                          node, node->capacity);
 
-            // Alocacao do vetor de ponteiros auxiliar para divisao dos ponteiros no noh
+            // Alocacao do vetor de ponteiros auxiliar para divisao dos ponteiros no nó
             btree_node **Vpointer_children_aux = Alocate_vpointer_children(node->capacity + 1);
             for (int i = 0; i < node->capacity+1; ++i) {
                 if (i != node->capacity) {
@@ -271,12 +282,12 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // Ponto onde o vetor de valores auxiliar vai ser dividido
             int Middle_position = Vkeys_aux_size/2;
 
-            // Passa todos o valores que devem ir pro noh da direita
+            // Passa todos o valores que devem ir pro nó da direita
             Right_node->used = node->capacity - Middle_position + 1;
 
             int adjust = 0;
-            // Caso o noh nao seja uma noh folha, nao devemos passar o valor do meio na divisao. Para isso diminuimos o
-            // numero de elementos do noh da direita e usamos "adjust" pra pegar os ultimos valores do vetor auxiliar
+            // Caso o nó nao seja uma nó folha, nao devemos passar o valor do meio na divisao. Para isso diminuimos o
+            // numero de elementos do nó da direita e usamos "adjust" pra pegar os ultimos valores do vetor auxiliar
             if (Vpointer_children_aux[0] != NULL) {
                 adjust = 1;
                 Right_node->used--;
@@ -287,8 +298,8 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             }
             Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size];
 
-            // Ajusta o noh atual pra ser o novo noh da esquerda, removendo os elementos q foram
-            // pro outro noh
+            // Ajusta o nó atual pra ser o novo nó da esquerda, removendo os elementos que foram
+            // pro outro nó
             node->Pointer_next = Right_node;
             node->used = Middle_position;
             for (int k = 0; k < node->used ; ++k) {
@@ -305,20 +316,20 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // Checa se o noh atual tem pai
             if(Father_node != NULL){
 
-                // Caso o noh atual tenha pai, fazemos o noh da direita tambem apontar pra ele
-                // como pai e inserimos o elemento do meio da divisao nesse noh pai junto com o
+                // Caso o nó atual tenha pai, fazemos o nó da direita tambem apontar pra ele
+                // como pai e inserimos o elemento do meio da divisao nesse nó pai junto com o
                 // novo ponteiro da direita
                 Right_node->Pointer_father = Father_node;
                 return Btree_insert(node->Pointer_father, Vkeys_aux[Middle_position], Right_node);
 
             }
-            else{ // Caso o noh atual nao tenha pai
+            else{ // Caso o nó atual nao tenha pai
 
                 // Criamos um pai novo
                 btree_node *Root_node = Allocate_btree_node(node->Pointer_father, node->Pointer_next,
                                                              node, node->capacity);
 
-                // Fazemos o noh atual apontar pro pai novo
+                // Fazemos o nó atual apontar pro pai novo
                 node->Pointer_father = Root_node;
 
                 // Colocamos o valor do meio no pai novo com os ponteiros da esquerda e direita
@@ -327,16 +338,16 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
                 Root_node->Vkeys[0] = Vkeys_aux[Middle_position];
                 Root_node->used = 1;
 
-                // Fazemos o noh da direita apontar pro pai novo
+                // Fazemos o nó da direita apontar pro pai novo
                 Right_node->Pointer_father = Root_node;
 
-                // Retornamos o novo noh raiz
+                // Retornamos o novo nó raiz
                 return Root_node;
 
             }
 
         }
-        else { // Caso o no atual tenha espaco pra inserir o novo valor
+        else { // Caso o nó atual tenha espaco pra inserir o novo valor
 
 
             // Insere o valor novo na posicao correta junto com o ponteiro da direita dele e tambem
@@ -371,9 +382,9 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
         }
 
     }
-    else{ // Caso nao o noh nao seja uma folha E nao seja uma insercao em pai
+    else{ // Caso nao o nó nao seja uma folha E nao seja uma insercao em pai
 
-        // Temos q descer na arvore para achar o noh correto onde esse valor deve ser inserido
+        // Temos que descer na arvore para achar o nó correto onde esse valor deve ser inserido
 
         // Procuramos o ponteiro pro noh que devemos descer para insercao
         btree_node *correct_child;
@@ -390,11 +401,22 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 
         }
 
-        // Insercao recursiva no noh encontrado
+        // Insercao recursiva no nó encontrado
         return Btree_insert(correct_child, value, NULL);
     }
 
     return NULL;
+}
+
+int cmpfunc (const void * a, const void * b) {
+    return ( *(int*)a - *(int*)b );
+}
+
+bool Btree_bulk_loading(int *Vkeys, int capacity){
+    qsort(Vkeys, capacity, sizeof(int), cmpfunc);
+    for (int i = 0; i < capacity ; ++i) {
+
+    }
 }
 
 // Função Principal
