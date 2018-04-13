@@ -5,8 +5,11 @@
 #include <math.h>
 #include <stdbool.h>
 
+//TODO Inserção de numeros iguais
+//TODO Bulk-loading
+//TODO Merge exclusão
 
-const int minimum_occupancy = 4;
+const int minimum_occupancy = 2;
 
 //Definição das stucts da árvore
 typedef struct btree_node btree_node;
@@ -429,7 +432,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 }
 
 int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
-    int Root_capacity = node->used;
+    int Root_used = node->used;
 
     if (node->Vpointer_children == NULL){
         int* keys = malloc(sizeof(int));
@@ -455,19 +458,24 @@ int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
         }
     }
     else {
-        for (int i = 0; i < Root_capacity; i++) {
-            if (i == Root_capacity - 1) {
+        for (int i = 0; i < Root_used + 1; i++) {
+            if (i == Root_used) {
                 if (node->Vkeys[i] <= key_min) {
-                    return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+                    if(node->Vpointer_children[i+1] != NULL) {
+                        return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+                    }
                 }
             }
             else {
                 if (key_min < node->Vkeys[i]) {
-                    return Btree_searchInterval(node->Vpointer_children[i], key_min, key_max);
+                    if(node->Vpointer_children[i] != NULL) {
+                        return Btree_searchInterval(node->Vpointer_children[i], key_min, key_max);
+                    }
 
                 } else if (node->Vkeys[i] <= key_min && node->Vkeys[i + 1] > key_min) {
-                    return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
-
+                    if(node->Vpointer_children[i+1] != NULL) {
+                        return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+                    }
                 }
             }
         }
@@ -558,15 +566,20 @@ btree_node* Btree_delete(btree_node *node, int value){
 
                 //eliminar o ponteiro que aponta para o primeiro(o da esquerda) no
 
-                for(int i = 0; i < father_node->used; i++){
-                    if(father_node->Vpointer_children[i] == first_node){
-                        for(int j = i; j < father_node->used -1; j++) {
-                            father_node->Vkeys[j] = father_node->Vkeys[j +1];
+
+                if(father_node->used > 1) {
+                    for (int i = 0; i < father_node->used; i++) {
+                        if (father_node->Vpointer_children[i] == first_node) {
+                            for (int j = i; j < father_node->used - 1; j++) {
+                                father_node->Vkeys[i] = father_node->Vkeys[i + 1];
+                            }
+                            for (int j = i; j < father_node->used; j++) {
+                                father_node->Vpointer_children[i + 1] = father_node->Vpointer_children[i + 2];
+                            }
                         }
                     }
-
+                    father_node->used--;
                 }
-                father_node->used --;
 
                 // se o pai ficar com capacidade minima
                 if(father_node->used < minimum_occupancy){
@@ -633,8 +646,6 @@ void BulkLoading(int* elementos, int capacity, int qtd_keys){
     btree_node *root = NewTree(9);
     Add_pages(root, qtd_keys, pags,Tree_nodecapacity, 0);
 }
-
-
 
 // Função Principal
 int main() {
