@@ -2,10 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <stdbool.h>
+
+
+const int minimum_occupancy = 4;
 
 //Definição das stucts da árvore
 typedef struct btree_node btree_node;
+
 
 struct btree_node {
     struct btree_node **Vpointer_children;
@@ -139,12 +144,21 @@ char* Print_btree_node(btree_node *node){
     return str_visualization;
 }
 
+/// Função para imprimir | ou +--- de acordo com a posição
+/// \param node            = Nó que vamos imprimir
+/// \param current_string  = A string atual
+/// \param num_pointers    = Quantidade de ponteiros para filhos o nó possui (alteramos a variavel em todos os escopos
+///                          pois passamos diretamente o endereço de memoria dessa variavel)
+/// \param pointers_pos    = Posição que os ponteiros serao impressos (Caso eu tenha 2 ponteiros em um nó que so tem
+///                          uma chave vamos imprimir os ponteiros nas posições 0, 4 pois cada espaço de chave na
+///                          visualização possui 4 espaços)
+/// \param indentation     = Parametro que é alterado em todo o escopo para saber o quao indentado devemos estar
 void Print_btree_recursive(btree_node *node, char* current_string, int *num_pointers, int **pointers_pos,
                            int indentation){
 
     // Imprimir ponteiros anteriores
     if((*num_pointers) > 0) {
-        // Imprimir a linha com todos os pontieros
+        // Imprimir a linha com todos os ponteiros
         int pos = 0;
         for (int i = 0; i < (*num_pointers); ++i) {
             for (int j = pos; j < (*pointers_pos)[i]; ++j) {
@@ -211,16 +225,18 @@ void Print_btree_recursive(btree_node *node, char* current_string, int *num_poin
     }
 }
 
-///
+/// Função para imprimir a arvore na qual contaremos o numero de nós em uma chave, alocaremos o espeço para as variáveis
+///    e chamamos a função para concatenar a string e depois imprimi-la na tela
 /// \param root
 /// \return
 char* Print_btree(btree_node *root){
+    int count_nodes = Count_nodes(root, 0);
     char *str_print = malloc(sizeof(char*)*5000);
     str_print[0]    = '\0';
     int num_pointers = 0;
-    int **pointer_pos = malloc(sizeof(int*));
-    (*pointer_pos) = NULL;
-    Print_btree_recursive(root, str_print, &num_pointers, pointer_pos, 0);
+    int **pointerpos = malloc(sizeof(int*));
+    (*pointerpos) = NULL;
+    Print_btree_recursive(root, str_print, &num_pointers, pointerpos, 0);
     return str_print;
 }
 
@@ -281,7 +297,7 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // Ponto onde o vetor de valores auxiliar vai ser dividido
             int Middle_position = Vkeys_aux_size/2;
 
-            // Passa todos o valores que devem ir pro nó da direita
+            // Passa todos o valores que devem ir pro noh da direita
             Right_node->used = node->capacity - Middle_position + 1;
 
             int adjust = 0;
@@ -297,8 +313,8 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             }
             Right_node->Vpointer_children[Right_node->used] = Vpointer_children_aux[Vkeys_aux_size];
 
-            // Ajusta o nó atual pra ser o novo nó da esquerda, removendo os elementos que foram
-            // pro outro nó
+            // Ajusta o noh atual pra ser o novo noh da esquerda, removendo os elementos q foram
+            // pro outro noh
             node->Pointer_next = Right_node;
             node->used = Middle_position;
             for (int k = 0; k < node->used ; ++k) {
@@ -315,20 +331,20 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
             // Checa se o noh atual tem pai
             if(Father_node != NULL){
 
-                // Caso o nó atual tenha pai, fazemos o nó da direita tambem apontar pra ele
-                // como pai e inserimos o elemento do meio da divisao nesse nó pai junto com o
+                // Caso o noh atual tenha pai, fazemos o noh da direita tambem apontar pra ele
+                // como pai e inserimos o elemento do meio da divisao nesse noh pai junto com o
                 // novo ponteiro da direita
                 Right_node->Pointer_father = Father_node;
                 return Btree_insert(node->Pointer_father, Vkeys_aux[Middle_position], Right_node);
 
             }
-            else{ // Caso o nó atual nao tenha pai
+            else{ // Caso o noh atual nao tenha pai
 
                 // Criamos um pai novo
                 btree_node *Root_node = Allocate_btree_node(node->Pointer_father, node->Pointer_next,
-                                                             node, node->capacity);
+                                                            node, node->capacity);
 
-                // Fazemos o nó atual apontar pro pai novo
+                // Fazemos o noh atual apontar pro pai novo
                 node->Pointer_father = Root_node;
 
                 // Colocamos o valor do meio no pai novo com os ponteiros da esquerda e direita
@@ -337,16 +353,16 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
                 Root_node->Vkeys[0] = Vkeys_aux[Middle_position];
                 Root_node->used = 1;
 
-                // Fazemos o nó da direita apontar pro pai novo
+                // Fazemos o noh da direita apontar pro pai novo
                 Right_node->Pointer_father = Root_node;
 
-                // Retornamos o novo nó raiz
+                // Retornamos o novo noh raiz
                 return Root_node;
 
             }
 
         }
-        else { // Caso o nó atual tenha espaco pra inserir o novo valor
+        else { // Caso o no atual tenha espaco pra inserir o novo valor
 
 
             // Insere o valor novo na posicao correta junto com o ponteiro da direita dele e tambem
@@ -381,9 +397,9 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
         }
 
     }
-    else{ // Caso nao o nó nao seja uma folha E nao seja uma insercao em pai
+    else{ // Caso nao o noh nao seja uma folha E nao seja uma insercao em pai
 
-        // Temos que descer na arvore para achar o nó correto onde esse valor deve ser inserido
+        // Temos q descer na arvore para achar o noh correto onde esse valor deve ser inserido
 
         // Procuramos o ponteiro pro noh que devemos descer para insercao
         btree_node *correct_child;
@@ -400,46 +416,323 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
 
         }
 
-        // Insercao recursiva no nó encontrado
+        // Insercao recursiva no noh encontrado
         return Btree_insert(correct_child, value, NULL);
     }
 
     return NULL;
 }
 
-int cmpfunc (const void * a, const void * b) {
-    return ( *(int*)a - *(int*)b );
+int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
+    int Root_capacity = node->used;
+
+    if (node->Vpointer_children == NULL){
+        int* keys = malloc(sizeof(int));
+        int index = 1, control = 1;
+
+        while(node != NULL && control == 1){
+            for(int k = 0; k < node->used; k++){
+                if(node->Vkeys[k] >= key_min && node->Vkeys[k] <= key_max){
+                    keys = (int*) realloc(keys, index * sizeof(int));
+                    keys[index - 1] = node->Vkeys[k];
+                    index ++;
+                }else if(node->Vkeys[k] > key_max){
+                    control = 0;
+                }
+            }
+            node = node->Pointer_next;
+        }
+
+        if(index > 0){
+            return keys;
+        }else{
+            return NULL;
+        }
+    }
+    else {
+        for (int i = 0; i < Root_capacity; i++) {
+            if (i == Root_capacity - 1) {
+                if (node->Vkeys[i] < key_min) {
+                    return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+                }
+            }
+            else {
+                if (key_min < node->Vkeys[i]) {
+                    return Btree_searchInterval(node->Vpointer_children[i], key_min, key_max);
+
+                } else if (node->Vkeys[i] <= key_min && node->Vkeys[i + 1] > key_min) {
+                    return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+
+                }
+            }
+        }
+    }
+    return NULL;
 }
 
-bool Btree_bulk_loading(int *Vkeys, int capacity){
-    qsort(Vkeys, capacity, sizeof(int), cmpfunc);
-    for (int i = 0; i < capacity ; ++i) {
+btree_node* Fix_tree(btree_node *node){
+    return node;
+}
 
+btree_node* Btree_delete(btree_node *node, int value){
+
+    btree_node *node_aux = Btree_searchEquality(node, value);
+
+    if (node_aux != NULL){
+
+        //Eliminando a chave do no
+        for(int i = 0; i < node_aux->used; i++){
+            if(node_aux->Vkeys[i] == value){
+                for(int j = i; j < node_aux->used; j++){
+                    node_aux->Vkeys[j] = node_aux->Vkeys[j+1];
+                }
+                node_aux->used --;
+            }
+        }
+
+        if(node_aux->used < minimum_occupancy){
+
+            // caso tenha um irmaoo a direita
+            if(node_aux->Pointer_next != NULL && node_aux->Pointer_next->used - 1 >= minimum_occupancy){
+
+                //adicionando o valor de chave no primeiro no(o que estava com a capacidade menor que a minima)
+                node_aux->Vkeys[node_aux->used] = node_aux->Pointer_next->Vkeys[0];
+                node_aux->used ++;
+
+                printf("qtd uedv%d \n", node_aux->Pointer_next->used );
+                for(int i = 0; i < node_aux->Pointer_next->used - 1 ; i++){
+                    node_aux->Pointer_next->Vkeys[i] = node_aux->Pointer_next->Vkeys[i +1];
+                }
+                node_aux->Pointer_next->used --;
+
+                // Ajustar o valor de chave do pai para apontar para o menor valor da segunda chave
+                for(int i = 0; i < node_aux->Pointer_father->used; i++){
+                    if(node_aux->Pointer_father->Vpointer_children[i] == node_aux){
+                        node_aux->Pointer_father->Vkeys[i] = node_aux->Pointer_next->Vkeys[0];
+                    }
+                }
+                return node_aux;
+                // caso o no tenha um irmao a esquerda
+            } else if(node_aux->Pointer_previous != NULL && node_aux->Pointer_previous->used - 1 >= minimum_occupancy){
+
+                //empurrando todas as chaves de pesquisa uma posicao para frente
+                for(int i = node_aux->used +1; i > 0 ; i--){
+                    node_aux->Vkeys[i] = node_aux->Vkeys[i - 1];
+                }
+                //Adicionar a segunda chave o ultimo elemento da primeira
+                node_aux->Vkeys[0] = node_aux->Pointer_previous->Vkeys[node_aux->Pointer_previous->used -1];
+                node_aux->used ++;
+
+
+                //eliminar a ultima chave do primeiro o
+                node_aux->Pointer_previous->used --;
+
+                // Ajustar o valor de chave do pai para apontar para o menor valor da segunda chave
+                for(int i = 0; i < node_aux->Pointer_father->used; i++){
+                    if(node_aux->Pointer_father->Vpointer_children[i] == node_aux){
+                        node_aux->Pointer_father->Vkeys[i -1] = node_aux->Vkeys[0];
+                    }
+                }
+                return node_aux;
+                // caso nao seja possivel emprestar de nenhum irmao, fazer o merge a esquerda
+            }else if(node_aux->Pointer_previous != NULL){
+                btree_node* first_node = node_aux->Pointer_previous;
+                //intercalando os nos folha, juntar com o no da direita
+                for(int i = 0; i < node_aux->used; i++){
+                    first_node->Vkeys[first_node->used + i] = node_aux->Vkeys[i];
+                    first_node->used ++;
+                }
+
+                //ajustando os ponteiro de next e previous
+                first_node->Pointer_next = node_aux->Pointer_next;
+                if(node_aux->Pointer_next != NULL) {
+                    node_aux->Pointer_next->Pointer_previous = first_node;
+                }
+
+                btree_node* father_node = first_node->Pointer_father;
+
+                //eliminar o ponteiro que aponta para o primeiro(o da esquerda) no
+
+                for(int i = 0; i < father_node->used; i++){
+                    if(father_node->Vpointer_children[i] == first_node){
+                        for(int j = i; j < father_node->used -1; j++) {
+                            father_node->Vkeys[j] = father_node->Vkeys[j +1];
+                        }
+                    }
+
+                }
+                father_node->used --;
+
+                // se o pai ficar com capacidade minima
+                if(father_node->used < minimum_occupancy){
+                    return Fix_tree(father_node);
+                }
+            }
+        }
+        // caso a remocao nao faz o no ter subocupacao
+        return node_aux;
+    }
+    // caso a chave nao esteja na arvore
+    return NULL;
+}
+
+
+void BulkLoading(int* elementos, int capacity, int qtd){
+    //ordenar o vetor
+
+    btree_node *tree = NewTree(9);
+    tree->used = 0;
+    int index = 0;
+    int Tree_nodecapacity = (int)ceil(qtd/9.0);
+    btree_node **Vpointer_children = malloc(sizeof(btree_node *)*Tree_nodecapacity);;
+    int i = 0;
+    // Dividir o conjunto em paginas
+    while (qtd > 0){
+        Vpointer_children[i] = malloc(sizeof(btree_node));
+        for (int j = 0; j < capacity; j++){
+            Vpointer_children[i]->Vkeys[j] = elementos[index];
+            index ++;
+            qtd --;
+        }
+        i++;
     }
 }
+bool Btree_delete_fun_aux (btree_node *root, int value){
+    if(Btree_delete(root, value) == NULL){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+bool Btree_search_equality_fun_aux (btree_node *root, int value){
+    if(Btree_searchEquality(root, value) == NULL){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+bool Btree_insert_fun_aux(btree_node *root, int value){
+    if(Btree_insert(root, value, NULL) == NULL){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
 
 // Função Principal
 int main() {
 
     // Lista de valores aleatorios para fazer caso de teste da nossa inseracao sequencial
-    int test1_size = 4;
-    int test1_entries = 17;
-    int test1_elements[17] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 61, 25, 52, 19, 20};
+    int option;
+    int *search_by_interval;
+    int value, value_min, value_max, aux, flag = 0;
+    int btree_capacity = 9;
+    int test1_entries  = 16;
+    int test1_elements[16] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 61, 25, 52, 19};
+    btree_node *tree = NewTree(btree_capacity);
 
-    // Criacao da arvore fazia
-    btree_node *tree = NewTree(test1_size);
+    while(flag == 0){
+        //Menu para o usuário
+        printf("| ++++ MENU DE OPCOES    ++++               |\n");
+        printf("|___________________________________________|\n");
+        printf("| ++++ Escolha uma opcao ++++               |\n");
+        printf("|     ++++ 1 - Visualizacao da arvore ++++  |\n");
+        printf("|     ++++ 2 - Insercao   na   arvore ++++  |\n");
+        printf("|     ++++ 3 - Delecao    da   arvore ++++  |\n");
+        printf("|     ++++ 4 - Busca   por  igualdade ++++  |\n");
+        printf("|     ++++ 5 - Busca   por  intervalo ++++  |\n");
+        printf("|     ++++ 6 - Bulk  loading          ++++  |\n");
+        printf("|___________________________________________|\n");
+        printf("---> ");
+        scanf("%d", &option);
+        printf("\n|___________________________________________|\n");
 
-    // Insercao em massa (Bulk loading)
-    for (int i = 0; i < test1_entries; ++i) {
-        btree_node *tmp_tree = Btree_insert(tree, test1_elements[i], NULL);
-        tree = tmp_tree;
-        // Impressao da arvore
-        printf("%d\n", test1_elements[i]);
-        printf("%s\n", Print_btree(tree));
-        printf("%d\n\n", Count_nodes(tree,0));
-        system("pause");
-        system("cls");
+        if (option == 1) {
+            printf("| ++++    Visualizacao      ++++            |\n");
+            printf("%s\n", Print_btree(tree));
+        }
+
+        if (option == 2) {
+            printf("| ++++    Insercao       ++++               |\n");
+            printf("|Digite um valor positivo e menor que 999:  |\n");
+
+            printf("---> ");
+            scanf("%d", &value);
+            if (Btree_insert_fun_aux(tree, value)) {
+                printf("|        INSERCAO EFETUADA                  |\n");
+            } else {
+                printf("|        INSERCAO NAO EFETUADA              |\n");
+            }
+        }
+
+        if (option == 3) {
+            printf("| ++++    Delecao        ++++               |\n");
+            printf("|Digite um valor positivo e menor que 999:  |\n");
+            printf("---> ");
+            scanf("%d", &value);
+            Btree_delete(tree, value);
+            if (Btree_delete_fun_aux(tree, value)) {
+                printf("|         DELECAO EFETUADA                 |\n");
+            } else {
+                printf("|        DELECAO NAO EFETUADA              |\n");
+            }
+        }
+
+        if (option == 4) {
+            printf("| ++++   Busca   por  igualdade   ++++      |\n");
+            printf("|Digite um valor positivo e menor que 999:  |\n");
+            printf("---> ");
+            scanf("%d", &value);
+            if (Btree_searchEquality(tree, value)) {
+                printf("|         ENCONTRADO                       |\n");
+            } else {
+                printf("|        NAO ENCONTRADO                    |\n");
+            }
+        }
+
+        if (option == 5) {
+            printf("| ++++   Busca   por  intervalo   ++++      |\n");
+            printf("|Digite o menor valor positivo              |\n");
+            printf("|e menor que 999:                           |\n");
+            printf("---> ");
+            scanf("%d", &value_min);
+            printf("\n|Digite o menor valor positivo              |\n");
+            printf("|e maior que 999:                           |\n");
+            printf("---> ");
+            scanf("%d", &value_max);
+            search_by_interval = Btree_searchInterval(tree, value_min, value_max);
+            for (int i = 0; i < sizeof(search_by_interval); ++i) {
+                printf("%d", search_by_interval[0]);
+            }
+
+        }
+
+        if (option == 6) {
+            printf("| ++++   Bulk Loading             ++++      |\n");
+            printf("|Digite quantos valores deseja inserir:     |\n");
+            printf("---> ");
+            scanf("%d", &aux);
+            int Vector_int[aux];
+            for (int i = 0; i < aux; ++i) {
+                printf("|Digite um valor positivo e menor que 999:  |\n");
+                printf("---> ");
+                scanf("%d", &Vector_int[i]);
+            }
+            BulkLoading(Vector_int, btree_capacity, aux);
+
+        }
+        printf("|            Deseja continuar?              |\n");
+        printf("|               1 - NAO                     |\n");
+        printf("|               0 - SIM                     |\n");
+        printf("---> ");
+        scanf("%d",&flag);
     }
 
+    system("pause");
     return 0;
 }
