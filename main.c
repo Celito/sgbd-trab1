@@ -215,13 +215,12 @@ void Print_btree_recursive(btree_node *node, char* current_string, int *num_poin
 /// \param root
 /// \return
 char* Print_btree(btree_node *root){
-    int count_nodes = Count_nodes(root, 0);
     char *str_print = malloc(sizeof(char*)*5000);
     str_print[0]    = '\0';
     int num_pointers = 0;
-    int **pointerpos = malloc(sizeof(int*));
-    (*pointerpos) = NULL;
-    Print_btree_recursive(root, str_print, &num_pointers, pointerpos, 0);
+    int **pointer_pos = malloc(sizeof(int*));
+    (*pointer_pos) = NULL;
+    Print_btree_recursive(root, str_print, &num_pointers, pointer_pos, 0);
     return str_print;
 }
 
@@ -424,21 +423,23 @@ int main() {
 
     // Lista de valores aleatorios para fazer caso de teste da nossa inseracao sequencial
     int test1_size = 4;
-    int test1_entries = 16;
-    int test1_elements[16] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 61, 25, 52, 19};
+    int test1_entries = 17;
+    int test1_elements[17] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 61, 25, 52, 19, 20};
 
     // Criacao da arvore fazia
     btree_node *tree = NewTree(test1_size);
 
     // Insercao em massa (Bulk loading)
     for (int i = 0; i < test1_entries; ++i) {
-        tree = Btree_insert(tree, test1_elements[i], NULL);
+        btree_node *tmp_tree = Btree_insert(tree, test1_elements[i], NULL);
+        tree = tmp_tree;
         // Impressao da arvore
         printf("%d\n", test1_elements[i]);
         printf("%s\n", Print_btree(tree));
         printf("%d\n\n", Count_nodes(tree,0));
+        system("pause");
+        system("cls");
     }
 
-    system("pause");
     return 0;
 }
