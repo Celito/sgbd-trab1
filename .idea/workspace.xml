@@ -57,8 +57,8 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="192">
-              <caret line="690" column="41" lean-forward="false" selection-start-line="690" selection-start-column="41" selection-end-line="690" selection-end-column="41" />
+            <state relative-caret-position="3151">
+              <caret line="654" column="20" lean-forward="false" selection-start-line="654" selection-start-column="20" selection-end-line="654" selection-end-column="20" />
               <folding>
                 <element signature="e#72#90#0" expanded="true" />
               </folding>
@@ -304,7 +304,7 @@
       <workItem from="1523555040904" duration="2199000" />
       <workItem from="1523558244755" duration="257000" />
       <workItem from="1523558593916" duration="8160000" />
-      <workItem from="1523589999843" duration="4290000" />
+      <workItem from="1523589999843" duration="4807000" />
     </task>
     <task id="LOCAL-00001" summary="Btree_insert v01 não funcionando">
       <created>1523330458845</created>
@@ -355,11 +355,18 @@
       <option name="project" value="LOCAL" />
       <updated>1523566739701</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Insercao OK Visualizacao OK Bulk-Loading TENTANDO Busca por igualdade FALHA DE SEG">
+      <created>1523594354986</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1523594354986</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="64626000" />
+    <option name="totallyTimeSpent" value="65143000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -407,7 +414,8 @@
     <MESSAGE value="Erro insercao corrigido, falha segmentação na visualização ultima insercao" />
     <MESSAGE value=" falha de segmentação na visualização ultima insercao" />
     <MESSAGE value="Insercao OK Visualizacao OK Bulk-Loading TENTANDO" />
-    <option name="LAST_COMMIT_MESSAGE" value="Insercao OK Visualizacao OK Bulk-Loading TENTANDO" />
+    <MESSAGE value="Insercao OK Visualizacao OK Bulk-Loading TENTANDO Busca por igualdade FALHA DE SEG" />
+    <option name="LAST_COMMIT_MESSAGE" value="Insercao OK Visualizacao OK Bulk-Loading TENTANDO Busca por igualdade FALHA DE SEG" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -694,8 +702,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="192">
-          <caret line="690" column="41" lean-forward="false" selection-start-line="690" selection-start-column="41" selection-end-line="690" selection-end-column="41" />
+        <state relative-caret-position="3151">
+          <caret line="654" column="20" lean-forward="false" selection-start-line="654" selection-start-column="20" selection-end-line="654" selection-end-column="20" />
           <folding>
             <element signature="e#72#90#0" expanded="true" />
           </folding>

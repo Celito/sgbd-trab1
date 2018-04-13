@@ -675,7 +675,6 @@ int main() {
             printf("|Digite um valor positivo e menor que 999:  |\n");
             printf("---> ");
             scanf("%d", &value);
-            Btree_delete(tree, value);
             if (Btree_delete_fun_aux(tree, value)) {
                 printf("|         DELECAO EFETUADA                 |\n");
             } else {
@@ -688,7 +687,7 @@ int main() {
             printf("|Digite um valor positivo e menor que 999:  |\n");
             printf("---> ");
             scanf("%d", &value);
-            if (Btree_searchEquality(tree, value)) {
+            if (Btree_search_equality_fun_aux(tree, value)) {
                 printf("|         ENCONTRADO                       |\n");
             } else {
                 printf("|        NAO ENCONTRADO                    |\n");
@@ -727,8 +726,9 @@ int main() {
 
         }
         printf("|            Deseja continuar?              |\n");
-        printf("|               1 - NAO                     |\n");
         printf("|               0 - SIM                     |\n");
+        printf("|               1 - NAO                     |\n");
+
         printf("---> ");
         scanf("%d",&flag);
     }
