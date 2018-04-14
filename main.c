@@ -2,19 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <stdbool.h>
 
-//TODO Inserção de numeros iguais
-//TODO Bulk-loading
-//TODO Merge exclusão
-
-const int minimum_occupancy = 2;
+//Ocupação mínima da árvore
+const int minimum_occupancy = 4;
 
 //Definição das stucts da árvore
 typedef struct btree_node btree_node;
 
-
+//Struct do nó
 struct btree_node {
     struct btree_node **Vpointer_children;
     struct btree_node *Pointer_father;
@@ -24,6 +19,19 @@ struct btree_node {
     int used;
     int capacity;
 };
+
+///Função auxiliar para o qsort
+int cmpfunc (const void * a, const void * b) {
+    if(*(int*)a < *(int*)b){
+        return -1;
+    }
+    else if (*(int*)a == *(int*)b){
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
 
 /// Função para alocar espaço do vetor de ponteiros para os filhos do nó
 /// \param Tree_nodecapacity = É a capacidade de um nó
@@ -97,6 +105,7 @@ btree_node* Allocate_btree_node(btree_node *Pointer_father,
     node->capacity = capacity;
     return node;
 }
+
 /// Função para criar uma nova árvore
 /// \param capacity = é a quantidade de chaves que cabem em um nó e a quantidades de ponteiros em um nó será
 ///                   capacity + 1
@@ -106,6 +115,10 @@ btree_node* NewTree(int capacity)
     return Allocate_btree_node(NULL,NULL,NULL, capacity);
 }
 
+/// Conta quantos nós tem em uma árvore
+/// \param node          = nó de arvore
+/// \param current_count = contador para o calculo da quantidade de nós
+/// \return um inteiro com a quantidade de nós na árvore
 int Count_nodes(btree_node *node, int current_count){
     for (int i = 0; i < node->used+1 ; ++i) {
         if (node->Vpointer_children[i] != NULL) {
@@ -431,14 +444,20 @@ btree_node* Btree_insert(btree_node *node, int value, btree_node *Child_right_no
     return NULL;
 }
 
-int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
+/// Função para fazer a busca por intervalo em uma árvore B+
+/// \param node    = nó da árvore
+/// \param key_min = o menor valor do intervalo
+/// \param key_max = o maior valor do intervalo
+/// \return um vetor de inteiros com as chaves encontradas nesse intervalo
+int* Btree_searchInterval(btree_node *node, int key_min, int key_max, int *size_of_vector){
     int Root_used = node->used;
 
-    if (node->Vpointer_children == NULL){
+    if (node->Vpointer_children[0] == NULL){
         int* keys = malloc(sizeof(int));
         int index = 1, control = 1;
 
         while(node != NULL && control == 1){
+
             for(int k = 0; k < node->used; k++){
                 if(node->Vkeys[k] >= key_min && node->Vkeys[k] <= key_max){
                     keys = (int*) realloc(keys, index * sizeof(int));
@@ -450,7 +469,7 @@ int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
             }
             node = node->Pointer_next;
         }
-
+        *size_of_vector = index;
         if(index > 0){
             return keys;
         }else{
@@ -462,19 +481,19 @@ int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
             if (i == Root_used) {
                 if (node->Vkeys[i] <= key_min) {
                     if(node->Vpointer_children[i+1] != NULL) {
-                        return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+                        return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max, size_of_vector);
                     }
                 }
             }
             else {
                 if (key_min < node->Vkeys[i]) {
-                    if(node->Vpointer_children[i] != NULL) {
-                        return Btree_searchInterval(node->Vpointer_children[i], key_min, key_max);
+                    if(node->Vpointer_children[i + 1] != NULL) {
+                        return Btree_searchInterval(node->Vpointer_children[i], key_min, key_max, size_of_vector);
                     }
 
                 } else if (node->Vkeys[i] <= key_min && node->Vkeys[i + 1] > key_min) {
                     if(node->Vpointer_children[i+1] != NULL) {
-                        return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max);
+                        return Btree_searchInterval(node->Vpointer_children[i + 1], key_min, key_max, size_of_vector);
                     }
                 }
             }
@@ -486,7 +505,6 @@ int* Btree_searchInterval(btree_node *node, int key_min, int key_max){
 btree_node* Fix_tree(btree_node *node){
     return node;
 }
-
 
 btree_node* Btree_delete(btree_node *node, int value){
 
@@ -550,6 +568,7 @@ btree_node* Btree_delete(btree_node *node, int value){
                 // caso nao seja possivel emprestar de nenhum irmao, fazer o merge a esquerda
             }else if(node_aux->Pointer_previous != NULL){
                 btree_node* first_node = node_aux->Pointer_previous;
+
                 //intercalando os nos folha, juntar com o no da direita
                 for(int i = 0; i < node_aux->used; i++){
                     first_node->Vkeys[first_node->used + i] = node_aux->Vkeys[i];
@@ -594,57 +613,78 @@ btree_node* Btree_delete(btree_node *node, int value){
     return NULL;
 }
 
-void Add_pages(btree_node* root, int qtd_keys, btree_node **pags, int Tree_nodecapacity, int index){
-
-    //caso tenhamos apenas uma pag para inserir na arvore
-    if(qtd_keys == 9 && index == 0){
-        root->Vpointer_children[0] = pags[0];
-        root->Vkeys[0] = pags[0]->Vkeys[pags[0]->used - 1] + 1;
-        root->used ++;
+/// Função para inserir os nós na árvore
+/// \param tree             = árvore
+/// \param btree_new_nodes  = vetor para os novos nós que criamos na função Btree_bulk_loading
+/// \param btree_capacity   = capacidade da árvore
+/// \param number_new_nodes = numero de novos nós criados
+/// \return a raiz da arvore
+btree_node* Btree_bulk_loading_insertion(btree_node* tree, btree_node **btree_new_nodes, int btree_capacity,
+                                         int number_new_nodes) {
+    if (number_new_nodes == 1){
+        return btree_new_nodes[0];
+    }
+    tree->Vpointer_children[0] = btree_new_nodes[0];
+    tree->Vpointer_children[1] = btree_new_nodes[1];
+    btree_new_nodes[0]->Pointer_father = tree;
+    btree_new_nodes[1]->Pointer_father = tree;
+    tree->Vkeys[0] = btree_new_nodes[1]->Vkeys[0];
+    tree->used++;
+    for (int i = 2; i < number_new_nodes; ++i) {
+        btree_new_nodes[i]->Pointer_father = tree;
+        tree = Btree_insert(tree, btree_new_nodes[i]->Vkeys[0], btree_new_nodes[i]);
     }
 
-    int k = root->used;
-    for(int i = index ; i < Tree_nodecapacity; i ++) {
-        //caso a raiz ainda tenha espaço
-        if(root->used < 9) {
-            if(k == 0) {
-                root->Vpointer_children[k] = pags[i];
-            }else{
-                root->Vpointer_children[k] = pags[i];
-                root->Vkeys[k-1] = pags[i]->Vkeys[0];
-                root->used ++;
-            }
-            k++;
-        }else{
-
-        }
-    }
-
+    return tree;
 }
 
-void BulkLoading(int* elementos, int capacity, int qtd_keys){
+/// Recebe um vetor de inteiros o ordena e o divide em nós para inseção em massa na árvore
+/// \param tree           = arvore
+/// \param Vkeys          = Vetores com chaves para serem ordenados
+/// \param btree_capacity = capacidade da arvore
+/// \param number_keys    = numero de chaves no VKEYS
+/// \return a raiz da arvore
+btree_node* Btree_bulk_loading(btree_node *tree, int *Vkeys, int btree_capacity, int number_keys){
     //ordenar o vetor
-
-    //qtd_keys representa o numero de elementos no vetor
-    btree_node *tree = NewTree(9);
-    tree->used = 0;
-    int index = 0;
-    int Tree_nodecapacity = (int)ceil(qtd_keys/9.0);
-    btree_node **pags = malloc(sizeof(btree_node *)*Tree_nodecapacity);;
-    int i = 0;
-    // Dividir o conjunto em paginas
-    while (qtd_keys > 0){
-        pags[i] = malloc(sizeof(btree_node));
-        for (int j = 0; j < capacity; j++){
-            pags[i]->Vkeys[j] = elementos[index];
-            index ++;
-            qtd_keys --;
-        }
-        i++;
+    //number_keys representa o numero de elementos no vetor
+    qsort(Vkeys, (size_t)number_keys, sizeof(int), cmpfunc);
+    int number_new_nodes = number_keys/btree_capacity;
+    if(number_keys%btree_capacity != 0){
+        number_new_nodes ++;
     }
-    // criar uma pag vazia para servir de raiz
-    btree_node *root = NewTree(9);
-    Add_pages(root, qtd_keys, pags,Tree_nodecapacity, 0);
+    btree_node **btree_new_nodes = malloc(sizeof(btree_node *) * number_new_nodes);
+    for (int k = 0; k < number_new_nodes; ++k) {
+        btree_new_nodes[k] = Allocate_btree_node(NULL, NULL, NULL, btree_capacity);
+    }
+    //divisão das paginas
+    int index_aux = 0;
+    int keys_to_insert = 0;
+    for (int j = 0; j < number_new_nodes; ++j) {
+        if((j + 1)*btree_capacity <= number_keys){
+            keys_to_insert = btree_capacity;
+        }
+        else{
+            keys_to_insert = number_keys%btree_capacity;
+        }
+        for (int i = 0; i < keys_to_insert; ++i) {
+            btree_new_nodes[j]->Vkeys[i] = Vkeys[index_aux];
+            index_aux++;
+        }
+        btree_new_nodes[j]->used = keys_to_insert;
+        for (int k = 0; k < number_new_nodes - 1 ; ++k) {
+            if (k == 0){
+                btree_new_nodes[k]->Pointer_previous = NULL;
+            }
+            else if (k == number_new_nodes - 1){
+                btree_new_nodes[k+1]->Pointer_next = NULL;
+            }
+            else if(k!=0) {
+                btree_new_nodes[k]->Pointer_next = btree_new_nodes[k + 1];
+                btree_new_nodes[k]->Pointer_previous = btree_new_nodes[k - 1];
+            }
+        }
+    }
+    return Btree_bulk_loading_insertion(tree, btree_new_nodes, btree_capacity, number_new_nodes);
 }
 
 // Função Principal
@@ -654,16 +694,10 @@ int main() {
     int option;
     int *search_by_interval;
     int value, value_min, value_max, aux, flag = 0;
-    int btree_capacity = 4;
-    int test1_entries  = 16;
-    int test1_elements[16] = {22, 35, 41, 12, 17, 43, 8, 27, 64, 50, 5, 32, 61, 25, 52, 19};
-    btree_node *tree = NewTree(btree_capacity);
-    for (int i = 0; i < test1_entries; ++i) {
-        tree = Btree_insert(tree, test1_elements[i], NULL);
-        // Impressao da arvore
-        //printf("%s\n", Print_btree(tree));
+    int btree_capacity = 9;
 
-    }
+    btree_node *tree = NewTree(btree_capacity);
+
     while(flag == 0){
         //Menu para o usuário
         printf("|          ++++ MENU DE OPCOES ++++         |\n");
@@ -688,17 +722,16 @@ int main() {
         if (option == 2) {
             printf("| ++++    Insercao       ++++               |\n");
             printf("|Digite um valor positivo e menor que 999:  |\n");
-
             printf("|---> ");
             scanf("%d", &value);
-            tree = Btree_insert(tree, value, NULL);
-            if (tree != NULL) {
-                printf("|        INSERCAO EFETUADA                  |\n");
-                printf("\n|___________________________________________|\n");
-            } else {
-                printf("|        INSERCAO NAO EFETUADA              |\n");
-                printf("\n|___________________________________________|\n");
+            while(Btree_searchEquality(tree, value) != NULL){
+                printf("\n|Esse numero ja existe, digite outro:       |\n");
+                scanf("%d", &value);
             }
+            tree = Btree_insert(tree, value, NULL);
+            printf("|        INSERCAO EFETUADA                  |\n");
+            printf("|___________________________________________|\n");
+
         }
 
         if (option == 3) {
@@ -734,27 +767,32 @@ int main() {
             printf("|e maior que 999:                           |\n");
             printf("|---> ");
             scanf("%d", &value_max);
-            search_by_interval = Btree_searchInterval(tree, value_min, value_max);
-            //for (int i = 0; i < sizeof(search_by_interval); ++i) {
-                //printf("%d", search_by_interval[0]);
-            //}
-
+            int size_search_vector = 0;
+            search_by_interval = Btree_searchInterval(tree, value_min, value_max, &size_search_vector);
+            for (int i = 0; i < size_search_vector - 1; ++i) {
+                printf("|%d|", search_by_interval[i]);
+            }
         }
 
         if (option == 6) {
-            printf("| ++++   Bulk Loading             ++++      |\n");
-            printf("|Digite quantos valores deseja inserir:     |\n");
-            printf("|---> ");
-            scanf("%d", &aux);
-            int Vector_int[aux];
-            for (int i = 0; i < aux; ++i) {
-                printf("|Digite um valor positivo e menor que 999:  |\n");
-                printf("|---> ");
-                scanf("%d", &Vector_int[i]);
+            if(tree->used != 0){
+                printf("Nao e possivel efetuar, a arvore nao esta vazia");
             }
-
+            else {
+                printf("| ++++   Bulk Loading             ++++      |\n");
+                printf("|Digite quantos valores deseja inserir:     |\n");
+                printf("|---> ");
+                scanf("%d", &aux);
+                int Vector_int[aux];
+                for (int i = 0; i < aux; ++i) {
+                    printf("|Digite um valor positivo e menor que 999:  |\n");
+                    printf("|---> ");
+                    scanf("%d", &Vector_int[i]);
+                }
+                tree = Btree_bulk_loading(tree, Vector_int, btree_capacity, aux);
+            }
         }
-        printf("\n|___________________________________________|\n");
+        printf("|___________________________________________|\n");
         printf("|            Deseja continuar?              |\n");
         printf("|               0 - SIM                     |\n");
         printf("|               1 - NAO                     |\n");
